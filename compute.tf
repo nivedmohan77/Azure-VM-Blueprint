@@ -23,7 +23,29 @@ locals {
   }
 }
 
-# The size parameter is updated to use the var.vm_sku (Standard_E2as_v4)
+resource "azurerm_public_ip" "pip" {
+  count               = var.vm_count
+  name                = "pip-vm-${count.index}"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+  allocation_method   = "Static"
+  sku                 = "Standard"
+}
+
+resource "azurerm_network_interface" "nic" {
+  count               = var.vm_count
+  name                = "nic-vm-${count.index}"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+
+  ip_configuration {
+    name                          = "internal"
+    subnet_id                     = azurerm_subnet.internal[local.vm_mapping[count.index].vnet_idx].id
+    private_ip_address_allocation = "Dynamic"
+    public_ip_address_id          = azurerm_public_ip.pip[count.index].id
+  }
+}
+
 resource "azurerm_linux_virtual_machine" "vm_linux" {
   count                           = var.image_selection == "ubuntu" ? var.vm_count : 0
   name                            = "vm-linux-${count.index}"
@@ -48,4 +70,25 @@ resource "azurerm_linux_virtual_machine" "vm_linux" {
   }
 }
 
-# Repeat similar 'size = var.vm_sku' for azurerm_windows_virtual_machine
+resource "azurerm_windows_virtual_machine" "vm_windows" {
+  count                 = var.image_selection == "windows" ? var.vm_count : 0
+  name                  = "vm-win-${count.index}"
+  resource_group_name   = azurerm_resource_group.main.name
+  location              = azurerm_resource_group.main.location
+  size                  = var.vm_sku
+  admin_username        = var.admin_username
+  admin_password        = var.admin_password
+  network_interface_ids = [azurerm_network_interface.nic[count.index].id]
+
+  os_disk {
+    caching              = "ReadWrite"
+    storage_account_type = "Standard_LRS"
+  }
+
+  source_image_reference {
+    publisher = local.os_image.windows.publisher
+    offer     = local.os_image.windows.offer
+    sku       = local.os_image.windows.sku
+    version   = local.os_image.windows.version
+  }
+}
