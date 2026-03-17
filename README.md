@@ -45,7 +45,31 @@ location               = "centralindia"
 image_selection        = "ubuntu"
 
 ```
-### 3. Deployment
+
+### 3. Select the right Azure subscription (if in case you have multiple susbcriptions)
+
+List your subscriptions:
+
+```bash
+az account list --output table
+```
+---
+
+Set the defaut subscription:
+
+```bash
+az account set --subscription <subscription_ID>
+```
+---
+
+Verify the result:
+
+```bash
+az account show --output table
+```
+---
+
+### 4. Deployment
 
 ```bash
 terraform init
