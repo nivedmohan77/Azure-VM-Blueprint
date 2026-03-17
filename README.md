@@ -53,21 +53,18 @@ List your subscriptions:
 ```bash
 az account list --output table
 ```
----
 
 Set the defaut subscription:
 
 ```bash
 az account set --subscription <subscription_ID>
 ```
----
 
 Verify the result:
 
 ```bash
 az account show --output table
 ```
----
 
 ### 4. Deployment
 
